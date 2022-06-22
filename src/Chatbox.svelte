@@ -1,14 +1,15 @@
 <script lang="ts">
     import { createEventDispatcher, SvelteComponent } from 'svelte';
-	import { messenger, unread } from "./stores.js";
+	import { messenger, unread, config } from "./stores.js";
     import { tick } from 'svelte';
     import { onMount } from 'svelte';
     import Messages from "./Messages.svelte"
     import Session from "./Session.svelte"
     import { Socket } from "./websockets"
-    
+
     export let chatboxOpen:boolean;
     const dispatch = createEventDispatcher();
+    let cfg:any ; 
     let socket:Socket;  
     let MessagesComponent:SvelteComponent; 
     let msg:string = "";
@@ -20,6 +21,9 @@
 		countValue = value;
 	});
 
+    config.subscribe((value:any) => {
+		cfg = value;
+	});
     let notify = async () => {
         await tick().then(()=>{
             if(chatboxOpen){
@@ -33,11 +37,10 @@
 
     let scrolld = async () => {
         await tick().then(MessagesComponent.scrollDown);
-        console.log("works....");
     }
     let watchSession = () => {
         if(session && !socket)
-            socket = new Socket({url:`ws://localhost:8000/entry`, store:messenger, callback: [scrolld, notify]});
+            socket = new Socket({url:`${cfg.config.websocket.proto}://${cfg.config.websocket.host}:${cfg.config.websocket.port}/entry`, store:messenger, callback: [scrolld, notify]});
         else
             console.log("Socket either connected or no session yet")
     } 
@@ -52,8 +55,6 @@
         dispatch("newmessage");
         msg = "";
     }
-
-    //$: msg, addMsg()
 
     let watchMe = (node:Element) => {
         if(node===undefined || node===null)
@@ -71,10 +72,14 @@
         });
     }
 
-    onMount(() => {
+    onMount(async () => {
         session = document.cookie.match(/^(.*;)?\s*session_id\s*=\s*[^;]+(.*)?$/)
-        console.log(session)
-        watchSession()
+        await fetch('/static/config.json').then(res => {
+            res.json().then(res=> {
+                config.set(res)
+                watchSession()
+            });
+        });
     });
 
     $: chatboxOpen, watchMe(node);

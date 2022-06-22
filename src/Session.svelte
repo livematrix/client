@@ -1,8 +1,13 @@
 <script lang="ts">
-    import { messenger, unread } from "./stores.js"; 
+    import { messenger, unread, config } from "./stores.js"; 
     import { onMount } from 'svelte';
     import { fade, fly } from 'svelte/transition';
     import { createEventDispatcher } from 'svelte';
+    
+    let cfg:any; 
+    config.subscribe((value:any) => {
+		cfg = value;
+	});
 
     interface Data{
         name: String, 
@@ -19,7 +24,7 @@
 
     let session = async (etc:any) => {
         const formBody = Object.keys(postData).map(key => encodeURIComponent(key) + '=' + encodeURIComponent(postData[key as keyof Data])).join('&');
-        fetch(`http://localhost:8000/session`,{ 
+        fetch(`${cfg.config.server.proto}://${cfg.config.server.host}:${cfg.config.server.port}/session`,{ 
             method:"POST", 
             mode:"no-cors", 
             credentials: "include",
@@ -29,7 +34,6 @@
             body: formBody, 
         })
         .then(res => {
-            console.log(res.status)
             if(res.status===0)
                 dispatch("sessiondone")
             else
