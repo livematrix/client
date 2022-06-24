@@ -1,7 +1,6 @@
 <script lang="ts">
-    import { messenger, unread, config } from "./stores.js"; 
+    import { config } from "./stores.js"; 
     import { onMount } from 'svelte';
-    import { fade, fly } from 'svelte/transition';
     import { createEventDispatcher } from 'svelte';
     
     let cfg:any; 

@@ -24,15 +24,20 @@
     config.subscribe((value:any) => {
 		cfg = value;
 	});
+
     let notify = async () => {
         await tick().then(()=>{
-            if(chatboxOpen){
+            if(chatboxOpen)
                 unread.set(0)
-            }else{
+            else
                 unread.update((n:number) => n + 1);
-            }
-            console.log(`unread: ${countValue}`)
         })
+    }
+
+    let greetings = async () => {
+        console.log("wjat...")
+        let message:string = JSON.stringify({author:"0", body: cfg.greetings});
+        messenger.update((messenger : any) => [...messenger, JSON.parse(message)]);
     }
 
     let scrolld = async () => {
@@ -40,7 +45,10 @@
     }
     let watchSession = () => {
         if(session && !socket)
-            socket = new Socket({url:`${cfg.config.websocket.proto}://${cfg.config.websocket.host}:${cfg.config.websocket.port}/entry`, store:messenger, callback: [scrolld, notify]});
+            socket = new Socket({   url:`${cfg.config.websocket.proto}://${cfg.config.websocket.host}:${cfg.config.websocket.port}/entry`, 
+                                    store:messenger,
+                                    onopen: [greetings], 
+                                    onmessage: [scrolld, notify]});
         else
             console.log("Socket either connected or no session yet")
     } 
